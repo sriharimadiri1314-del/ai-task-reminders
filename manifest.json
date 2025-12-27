@@ -1,0 +1,15 @@
+{
+  "name": "AI Task Reminders",
+  "short_name": "AI Reminder",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#4a6cf7",
+  "theme_color": "#4a6cf7",
+  "icons": [
+    {
+      "src": "icon.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    }
+  ]
+}

@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>AI Task Reminders</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="manifest" href="manifest.json">
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f6fb;
+            margin: 0;
+            padding: 0;
+            color: #333;
+        }
+
+        header {
+            background: #4a6cf7;
+            color: white;
+            text-align: center;
+            padding: 50px 20px;
+        }
+
+        section {
+            max-width: 800px;
+            margin: auto;
+            padding: 30px 20px;
+        }
+
+        h2 {
+            color: #4a6cf7;
+        }
+
+        .box {
+            background: white;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        input, button {
+            width: 100%;
+            padding: 12px;
+            margin-top: 10px;
+            font-size: 16px;
+        }
+
+        button {
+            background: #4a6cf7;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        button:hover {
+            background: #3957d6;
+        }
+
+        footer {
+            background: #222;
+            color: #ccc;
+            text-align: center;
+            padding: 15px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>AI Task Reminders</h1>
+    <p>Speak or type your task — AI will remind you</p>
+</header>
+
+<section>
+    <div class="box">
+        <h2>Set a Reminder</h2>
+
+        <input type="text" id="taskInput" placeholder="Speak or type your task">
+
+        <button onclick="startVoice()">🎤 Speak Task</button>
+
+        <input type="number" id="timeInput" placeholder="Reminder time (seconds for demo)">
+
+        <button onclick="setReminder()">🔔 Set Reminder</button>
+    </div>
+</section>
+
+<footer>
+    © 2025 AI Task Reminders | College Project
+</footer>
+
+<script>
+/* ---------- VOICE INPUT ---------- */
+function startVoice() {
+    const SpeechRecognition =
+        window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    if (!SpeechRecognition) {
+        alert("Speech Recognition not supported");
+        return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = "en-US";
+
+    recognition.onresult = function (event) {
+        document.getElementById("taskInput").value =
+            event.results[0][0].transcript;
+    };
+
+    recognition.start();
+}
+
+/* ---------- NOTIFICATION PERMISSION ---------- */
+if ("Notification" in window) {
+    Notification.requestPermission();
+}
+
+/* ---------- SHOW NOTIFICATION ---------- */
+function showNotification(task) {
+    if (Notification.permission === "granted") {
+        new Notification("⏰ AI Task Reminder", {
+            body: task,
+            icon: "icon.png"
+        });
+    }
+}
+
+/* ---------- SET REMINDER ---------- */
+function setReminder() {
+    const task = document.getElementById("taskInput").value;
+    const time = document.getElementById("timeInput").value;
+
+    if (!task || !time) {
+        alert("Please enter task and time");
+        return;
+    }
+
+    setTimeout(() => {
+        showNotification(task);
+    }, time * 1000);
+
+    alert("Reminder Set Successfully!");
+}
+
+/* ---------- REGISTER SERVICE WORKER ---------- */
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('service-worker.js');
+}
+</script>
+
+</body>
+</html>
