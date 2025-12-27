@@ -2,156 +2,286 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>AI Task Reminders</title>
+    <title>AI Task Reminders – Pro</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <link rel="manifest" href="manifest.json">
-
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #f4f6fb;
-            margin: 0;
-            padding: 0;
-            color: #333;
+        :root {
+            --primary: #4a6cf7;
+            --primary-dark: #3957d6;
+            --danger: #ff4d4d;
+            --bg: #f8fafc;
+            --card: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
         }
 
-        header {
-            background: #4a6cf7;
-            color: white;
-            text-align: center;
-            padding: 50px 20px;
+        * { box-sizing: border-box; font-family: 'Inter', system-ui, sans-serif; }
+        body { margin: 0; background: var(--bg); color: var(--text-main); }
+        
+        .header { background: var(--primary); color: white; padding: 3rem 1rem; text-align: center; }
+        .container { max-width: 600px; margin: -2rem auto 2rem; padding: 0 1rem; }
+        
+        .card { 
+            background: var(--card); padding: 2rem; border-radius: 1rem; 
+            box-shadow: var(--shadow); margin-bottom: 1.5rem; 
         }
 
-        section {
-            max-width: 800px;
-            margin: auto;
-            padding: 30px 20px;
+        .input-group { margin-bottom: 1rem; }
+        label { display: block; font-size: 0.875rem; font-weight: 600; margin-bottom: 0.5rem; }
+        
+        input { 
+            width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; 
+            border-radius: 0.5rem; outline: none; transition: border-color 0.2s;
         }
+        input:focus { border-color: var(--primary); ring: 2px var(--primary); }
 
-        h2 {
-            color: #4a6cf7;
+        .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 1rem; }
+        button { 
+            padding: 0.75rem; border-radius: 0.5rem; border: none; 
+            font-weight: 600; cursor: pointer; transition: all 0.2s;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
         }
+        .btn-primary { background: var(--primary); color: white; width: 100%; }
+        .btn-secondary { background: #f1f5f9; color: var(--text-main); }
+        button:hover { opacity: 0.9; transform: translateY(-1px); }
 
-        .box {
-            background: white;
-            padding: 25px;
-            border-radius: 8px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        .reminder-item {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 1rem; border-bottom: 1px solid #f1f5f9;
         }
+        .reminder-info strong { display: block; }
+        .reminder-info small { color: var(--text-muted); }
+        .delete-btn { color: var(--danger); cursor: pointer; background: none; border: none; }
 
-        input, button {
-            width: 100%;
-            padding: 12px;
-            margin-top: 10px;
-            font-size: 16px;
-        }
-
-        button {
-            background: #4a6cf7;
-            color: white;
-            border: none;
-            cursor: pointer;
-            border-radius: 5px;
-        }
-
-        button:hover {
-            background: #3957d6;
-        }
-
-        footer {
-            background: #222;
-            color: #ccc;
-            text-align: center;
-            padding: 15px;
-            font-size: 14px;
-        }
+        .hidden { display: none; }
     </style>
 </head>
 <body>
 
-<header>
-    <h1>AI Task Reminders</h1>
-    <p>Speak or type your task — AI will remind you</p>
+<header class="header">
+    <h1><i class="fas fa-brain"></i> AI Task Agent</h1>
+    <p>Context-aware productivity assistant</p>
 </header>
 
-<section>
-    <div class="box">
-        <h2>Set a Reminder</h2>
-
-        <input type="text" id="taskInput" placeholder="Speak or type your task">
-
-        <button onclick="startVoice()">🎤 Speak Task</button>
-
-        <input type="number" id="timeInput" placeholder="Reminder time (seconds for demo)">
-
-        <button onclick="setReminder()">🔔 Set Reminder</button>
+<div class="container">
+    <div id="auth-view" class="card">
+        <h2>Welcome Back</h2>
+        <div class="input-group">
+            <label>Username</label>
+            <input type="text" id="username" placeholder="e.g. dev_user">
+        </div>
+        <button class="btn-primary" id="login-btn">Secure Login</button>
     </div>
-</section>
 
-<footer>
-    © 2025 AI Task Reminders | College Project
-</footer>
+    <div id="app-view" class="card hidden">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>New Reminder</h2>
+            <button class="btn-secondary" id="logout-btn" style="padding: 5px 10px; font-size: 12px;">Logout</button>
+        </div>
+        
+        <div class="input-group">
+            <label>Task Description</label>
+            <input type="text" id="task-input" placeholder="What needs to be done?">
+        </div>
+        
+        <div class="btn-grid">
+            <button class="btn-secondary" id="voice-btn"><i class="fas fa-microphone"></i> Voice</button>
+            <button class="btn-secondary" id="ai-btn"><i class="fas fa-magic"></i> AI Time</button>
+        </div>
 
-<script>
-/* ---------- VOICE INPUT ---------- */
-function startVoice() {
-    const SpeechRecognition =
-        window.SpeechRecognition || window.webkitSpeechRecognition;
+        <div class="input-group" style="margin-top:1rem;">
+            <label>Scheduled Time</label>
+            <input type="datetime-local" id="date-input">
+        </div>
 
-    if (!SpeechRecognition) {
-        alert("Speech Recognition not supported");
-        return;
+        <button class="btn-primary" id="add-btn" style="margin-top:1rem;">Save Reminder</button>
+
+        <h3 style="margin-top: 2rem;">Active Pipeline</h3>
+        <div id="reminder-list"></div>
+    </div>
+</div>
+
+<script type="module">
+/**
+ * Professional AI Reminder Agent
+ * Using Module Pattern for Encapsulation
+ */
+
+class ReminderAgent {
+    constructor() {
+        this.reminders = [];
+        this.user = localStorage.getItem('agent_user');
+        this.init();
     }
 
-    const recognition = new SpeechRecognition();
-    recognition.lang = "en-US";
+    init() {
+        this.bindEvents();
+        if (this.user) this.renderApp();
+    }
 
-    recognition.onresult = function (event) {
-        document.getElementById("taskInput").value =
-            event.results[0][0].transcript;
-    };
+    bindEvents() {
+        document.getElementById('login-btn').onclick = () => this.handleAuth();
+        document.getElementById('logout-btn').onclick = () => this.handleLogout();
+        document.getElementById('voice-btn').onclick = () => this.handleVoice();
+        document.getElementById('ai-btn').onclick = () => this.predictTime();
+        document.getElementById('add-btn').onclick = () => this.addReminder();
+    }
 
-    recognition.start();
-}
+    // --- AUTHENTICATION MODULE ---
+    handleAuth() {
+        const user = document.getElementById('username').value.trim();
+        if (!user) return alert("Validation Failed: Username required");
+        
+        this.user = user;
+        localStorage.setItem('agent_user', user);
+        this.renderApp();
+    }
 
-/* ---------- NOTIFICATION PERMISSION ---------- */
-if ("Notification" in window) {
-    Notification.requestPermission();
-}
+    handleLogout() {
+        localStorage.clear();
+        location.reload();
+    }
 
-/* ---------- SHOW NOTIFICATION ---------- */
-function showNotification(task) {
-    if (Notification.permission === "granted") {
-        new Notification("⏰ AI Task Reminder", {
-            body: task,
-            icon: "icon.png"
+    // --- UI ENGINE ---
+    renderApp() {
+        document.getElementById('auth-view').classList.add('hidden');
+        document.getElementById('app-view').classList.remove('hidden');
+        this.loadData();
+    }
+
+    // --- AI & VOICE ENGINE ---
+    async handleVoice() {
+        const Speech = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!Speech) return alert("Web Speech API not supported in this browser.");
+
+        const recognition = new Speech();
+        recognition.lang = 'en-US';
+        
+        recognition.onstart = () => document.getElementById('voice-btn').innerText = "Listening...";
+        recognition.onresult = (e) => {
+            document.getElementById('task-input').value = e.results[0][0].transcript;
+            this.predictTime(); // Auto-trigger AI prediction
+        };
+        recognition.onend = () => document.getElementById('voice-btn').innerHTML = '<i class="fas fa-microphone"></i> Voice';
+        recognition.start();
+    }
+
+    predictTime() {
+        const text = document.getElementById('task-input').value.toLowerCase();
+        const now = new Date();
+        
+        // Strategy Pattern for AI Prediction
+        const rules = [
+            { keywords: ['morning', 'breakfast'], hour: 8, min: 30 },
+            { keywords: ['noon', 'lunch'], hour: 12, min: 0 },
+            { keywords: ['evening', 'dinner'], hour: 19, min: 0 },
+            { keywords: ['night', 'sleep'], hour: 22, min: 0 }
+        ];
+
+        const match = rules.find(r => r.keywords.some(k => text.includes(k)));
+        
+        if (match) {
+            now.setHours(match.hour, match.min, 0);
+        } else {
+            now.setMinutes(now.getMinutes() + 30); // Default buffer
+        }
+
+        // Format to local ISO string required by <input type="datetime-local">
+        const tzOffset = now.getTimezoneOffset() * 60000;
+        const localISOTime = (new Date(now - tzOffset)).toISOString().slice(0, 16);
+        document.getElementById('date-input').value = localISOTime;
+    }
+
+    // --- DATA PERSISTENCE & SCHEDULING ---
+    loadData() {
+        const raw = localStorage.getItem(`tasks_${this.user}`);
+        this.reminders = raw ? JSON.parse(raw) : [];
+        this.syncUI();
+        this.reminders.forEach(r => this.scheduleTask(r));
+    }
+
+    addReminder() {
+        const task = document.getElementById('task-input').value;
+        const time = document.getElementById('date-input').value;
+
+        if (!task || !time) return;
+
+        const newReminder = {
+            id: Date.now(),
+            task,
+            time,
+            timestamp: new Date(time).getTime()
+        };
+
+        this.reminders.push(newReminder);
+        localStorage.setItem(`tasks_${this.user}`, JSON.stringify(this.reminders));
+        this.scheduleTask(newReminder);
+        this.syncUI();
+        
+        // Reset Inputs
+        document.getElementById('task-input').value = '';
+    }
+
+    scheduleTask(reminder) {
+        const delay = reminder.timestamp - Date.now();
+        if (delay <= 0) return;
+
+        setTimeout(() => {
+            this.triggerNotification(reminder.task);
+            this.removeReminder(reminder.id);
+        }, delay);
+    }
+
+    triggerNotification(msg) {
+        if (Notification.permission === 'granted') {
+            new Notification("🚀 Task Execution", {
+                body: msg,
+                icon: "https://cdn-icons-png.flaticon.com/512/1792/1792931.png"
+            });
+        }
+    }
+
+    removeReminder(id) {
+        this.reminders = this.reminders.filter(r => r.id !== id);
+        localStorage.setItem(`tasks_${this.user}`, JSON.stringify(this.reminders));
+        this.syncUI();
+    }
+
+    syncUI() {
+        const list = document.getElementById('reminder-list');
+        list.innerHTML = this.reminders.length ? '' : '<p style="color:#64748b; font-size:0.9rem;">No pending tasks.</p>';
+        
+        this.reminders.sort((a,b) => a.timestamp - b.timestamp).forEach(r => {
+            const div = document.createElement('div');
+            div.className = 'reminder-item';
+            div.innerHTML = `
+                <div class="reminder-info">
+                    <strong>${r.task}</strong>
+                    <small>${new Date(r.time).toLocaleString()}</small>
+                </div>
+                <button class="delete-btn" onclick="app.removeReminder(${r.id})">
+                    <i class="fas fa-trash"></i>
+                </button>
+            `;
+            list.appendChild(div);
         });
     }
 }
 
-/* ---------- SET REMINDER ---------- */
-function setReminder() {
-    const task = document.getElementById("taskInput").value;
-    const time = document.getElementById("timeInput").value;
-
-    if (!task || !time) {
-        alert("Please enter task and time");
-        return;
-    }
-
-    setTimeout(() => {
-        showNotification(task);
-    }, time * 1000);
-
-    alert("Reminder Set Successfully!");
-}
-
-/* ---------- REGISTER SERVICE WORKER ---------- */
-if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('service-worker.js');
+// Global instance for the delete button to work with inline onclick (for demo simplicity)
+window.app = new ReminderAgent();
+Notification.requestPermission();
+</script>
+<script>
+if ("Notification" in window) {
+    Notification.requestPermission().then(permission => {
+        console.log("Notification permission:", permission);
+    });
 }
 </script>
+
 
 </body>
 </html>
