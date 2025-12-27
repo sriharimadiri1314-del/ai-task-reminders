@@ -85,26 +85,21 @@ button {
 
 <div class="container">
 
-<!-- 🔐 LOGIN PAGE -->
 <div class="card" id="loginPage">
 <h2>🔐 Login</h2>
 <input id="username" placeholder="Enter username">
 <button class="primary" onclick="login()">Login</button>
 </div>
 
-<!-- 📅 MAIN APP -->
 <div class="card hidden" id="appPage">
 <h2>📅 New Reminder</h2>
 
-<input id="taskInput" placeholder="Speak or type task">
-<button class="secondary" onclick="startVoice()">🎤 Voice</button>
-
+<input id="taskInput" placeholder="Task">
 <input type="datetime-local" id="timeInput">
-<button class="secondary" onclick="aiPredict()">🧠 AI Predict Time</button>
 
 <button class="primary" onclick="addReminder()">🔔 Add Reminder</button>
 
-<h3 style="margin-top:20px">Your Reminders</h3>
+<h3>Your Reminders</h3>
 <div id="list"></div>
 
 <button class="secondary" onclick="logout()">Logout</button>
@@ -113,7 +108,21 @@ button {
 </div>
 
 <script>
-/* ---------- LOGIN ---------- */
+/* ================= SERVICE WORKER REGISTER ================= */
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js');
+}
+
+/* ================= REQUEST NOTIFICATION PERMISSION ================= */
+async function requestPermission() {
+    const permission = await Notification.requestPermission();
+    if (permission !== "granted") {
+        alert("Please allow notifications");
+    }
+}
+requestPermission();
+
+/* ================= LOGIN ================= */
 function login(){
     const user = username.value.trim();
     if(!user) return alert("Enter username");
@@ -122,44 +131,19 @@ function login(){
     appPage.classList.remove("hidden");
     loadReminders();
 }
+
 function logout(){
     localStorage.clear();
     location.reload();
 }
+
 if(localStorage.getItem("user")){
     loginPage.classList.add("hidden");
     appPage.classList.remove("hidden");
+    loadReminders();
 }
 
-/* ---------- VOICE ---------- */
-function startVoice(){
-    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if(!SR) return alert("Voice not supported");
-    const r = new SR();
-    r.onresult = e => taskInput.value = e.results[0][0].transcript;
-    r.start();
-}
-
-/* ---------- AI TIME ---------- */
-function aiPredict(){
-    let d = new Date();
-    d.setMinutes(d.getMinutes()+30);
-    timeInput.value = new Date(d - d.getTimezoneOffset()*60000)
-                        .toISOString().slice(0,16);
-}
-
-/* ---------- NOTIFICATIONS ---------- */
-if("Notification" in window){
-    Notification.requestPermission();
-}
-
-function notify(task){
-    if(Notification.permission==="granted"){
-        new Notification("⏰ Reminder", { body: task });
-    }
-}
-
-/* ---------- REMINDERS ---------- */
+/* ================= REMINDERS ================= */
 let reminders = [];
 
 function loadReminders(){
@@ -181,10 +165,19 @@ function addReminder(){
     taskInput.value="";
 }
 
+/* ================= REAL NOTIFICATION ================= */
 function schedule(r){
     const delay = new Date(r.time) - new Date();
-    if(delay>0){
-        setTimeout(()=>notify(r.task), delay);
+    if(delay > 0){
+        setTimeout(() => {
+            navigator.serviceWorker.ready.then(reg => {
+                reg.showNotification("⏰ AI Task Reminder", {
+                    body: r.task,
+                    icon: "https://cdn-icons-png.flaticon.com/512/1792/1792931.png",
+                    vibrate: [200, 100, 200]
+                });
+            });
+        }, delay);
     }
 }
 
